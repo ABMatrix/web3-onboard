@@ -16,6 +16,10 @@ import App from './views/Index.svelte'
 import type { InitOptions, OnboardAPI } from './types'
 import { getDevice } from './utils'
 
+export * from './provider'
+export * from './store/actions'
+export * from './streams'
+
 const API = {
   connectWallet,
   disconnectWallet,
@@ -78,11 +82,11 @@ function init(options: InitOptions): OnboardAPI {
     reset$.next()
   }
 
-  const app = svelteInstance || mountApp()
+  // const app = svelteInstance || mountApp()
 
   internalState$.next({
     appMetadata,
-    svelteInstance: app,
+    svelteInstance: null,
     device
   })
 

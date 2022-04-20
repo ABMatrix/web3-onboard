@@ -1,3 +1,5 @@
+**Fork from https://github.com/blocknative/web3-onboard＊＊
+
 # @web3-onboard/core
 
 This is the core package that contains all of the UI and logic to be able to seamlessly connect user's wallets to your app and track the state of those wallets. Onboard no longer contains any wallet specific code, so wallets need to be passed in upon initialization.
