@@ -94,12 +94,13 @@ export interface AppState {
   walletModules: WalletModule[]
   wallets: WalletState[]
   accountCenter: AccountCenter
+  locale: Locale
 }
 
 export type InternalState = {
   svelteInstance: SvelteComponent | null
   appMetadata: AppMetadata | null
-  device: Device | null
+  device: Device | DeviceNotBrowser
 }
 
 export type Locale = string
@@ -112,17 +113,16 @@ export type AccountCenterPosition =
   | 'bottomLeft'
   | 'topLeft'
 
-export type AccountCenterOptions = {
-  desktop?: {
-    position?: AccountCenterPosition
-    enabled?: AccountCenter['enabled']
-  }
-}
-
 export type AccountCenter = {
   enabled: boolean
-  position: AccountCenterPosition
-  expanded: boolean
+  position?: AccountCenterPosition
+  expanded?: boolean
+  minimal?: boolean
+}
+
+export type AccountCenterOptions = {
+  desktop: Omit<AccountCenter, 'expanded'>
+  mobile: Omit<AccountCenter, 'expanded'>
 }
 
 // ==== ACTIONS ==== //
@@ -135,6 +135,8 @@ export type Action =
   | UpdateAccountAction
   | UpdateAccountCenterAction
   | SetWalletModulesAction
+  | SetLocaleAction
+  | UpdateAllWalletsAction
 
 export type AddChainsAction = { type: 'add_chains'; payload: Chain[] }
 export type AddWalletAction = { type: 'add_wallet'; payload: WalletState }
@@ -169,8 +171,24 @@ export type SetWalletModulesAction = {
   payload: WalletModule[]
 }
 
+export type SetLocaleAction = {
+  type: 'set_locale'
+  payload: string
+}
+
+export type UpdateAllWalletsAction = {
+  type: 'update_balance'
+  payload: WalletState[]
+}
+
 // ==== MISC ==== //
 export type ChainStyle = {
   icon: string
   color: string
+}
+
+export type DeviceNotBrowser = {
+  type: null
+  os: null
+  browser: null
 }

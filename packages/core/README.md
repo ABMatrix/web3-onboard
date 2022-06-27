@@ -12,7 +12,7 @@ Install the core module:
 
 If you would like to support all wallets, then you can install all of the wallet modules:
 
-`npm i @web3-onboard/injected-wallets @web3-onboard/ledger @web3-onboard/trezor @web3-onboard/keepkey @web3-onboard/walletconnect @web3-onboard/walletlink @web3-onboard/torus @web3-onboard/portis @web3-onboard/mew @web3-onboard/gnosis @web3-onboard/magic @web3-onboard/fortmatic`
+`npm i @web3-onboard/injected-wallets @web3-onboard/coinbase @web3-onboard/ledger @web3-onboard/trezor @web3-onboard/keepkey @web3-onboard/walletconnect @web3-onboard/torus @web3-onboard/portis @web3-onboard/mew @web3-onboard/gnosis @web3-onboard/magic @web3-onboard/fortmatic`
 
 Note:
 
@@ -94,20 +94,19 @@ To see a list of all of the text values that can be internationalized or replace
 Onboard is using the [ICU syntax](https://formatjs.io/docs/core-concepts/icu-syntax/) for formatting under the hood.
 
 **`accountCenter`**
-An object that defines whether the account center UI is enabled and it's position on the screen. Currently the account center is disabled for mobile devices, so only desktop options are available.
+An object that defines whether the account center UI (default and minimal) is enabled and it's position on the screen. Currently the account center is enabled for both desktop and mobile devices.
 
 ```typescript
-type AccountCenterOptions = {
-  desktop: {
-    position?: AccountCenterPosition // default: 'topRight'
-    enabled?: AccountCenter['enabled'] // default: true
-  }
+export type AccountCenter = {
+  enabled: boolean
+  position?: AccountCenterPosition // default: 'topRight'
+  expanded?: boolean // default: true
+  minimal?: boolean // enabled by default for mobile
 }
 
-type AccountCenter = {
-  enabled: boolean
-  position: AccountCenterPosition
-  expanded: boolean
+export type AccountCenterOptions = {
+  desktop: Omit<AccountCenter, 'expanded'>
+  mobile: Omit<AccountCenter, 'expanded'>
 }
 
 type AccountCenterPosition =
@@ -176,7 +175,19 @@ const onboard = Onboard({
       { name: 'MetaMask', url: 'https://metamask.io' },
       { name: 'Coinbase', url: 'https://wallet.coinbase.com/' }
     ]
-  }
+  },
+  accountCenter: {
+    desktop: {
+      position: 'topRight',
+      enabled: true,
+      minimal: true
+    },
+    mobile: {
+      position: 'topRight',
+      enabled: true,
+      minimal: true
+    }
+  },
   i18n: {
     en: {
       connect: {
@@ -318,6 +329,7 @@ type AccountCenter = {
   enabled: boolean
   position: AccountCenterPosition
   expanded: boolean
+  minimal: boolean
 }
 
 type AccountCenterPosition =
@@ -406,6 +418,18 @@ const onboard = Onboard({
 onboard.state.actions.setWalletModules([ledger, trezor])
 ```
 
+**updatedBalances**
+You may decide to get updated balances for connected wallets after a user action by calling the `updatedBalances` function, which expects a conditional array of addresses.
+
+```
+onboard.state.actions.updateBalances() // update all balances for all connected addresses
+onboard.state.actions.updateBalances(['0xfdadfadsadsadsadasdsa']) // update balance for one address
+onboard.state.actions.updateBalances([
+  '0xfdadfadsadsadsadasdsa',
+  '0xfdsafdsfdsfdsfds'
+]) // update balance for two addresses
+```
+
 ## Setting the User's Chain/Network
 
 When initializing Onboard you define a list of chains/networks that your app supports. If you would like to prompt the user to switch to one of those chains, you can use the `setChain` method on an initialized instance of Onboard:
@@ -489,7 +513,17 @@ The Onboard styles can customized via [CSS variables](https://developer.mozilla.
   --onboard-wallet-button-background-hover
   --onboard-wallet-button-color
   --onboard-wallet-button-border-color
+  --onboard-wallet-button-border-radius
+  --onboard-wallet-button-box-shadow
   --onboard-wallet-app-icon-border-color
+
+  /* CUSTOMIZE THE CONNECT MODAL */
+  --onboard-modal-border-radius
+  --onboard-modal-backdrop
+  --onboard-modal-box-shadow
+
+  /* CUSTOMIZE THE ACTION REQUIRED MODAL */
+  --onboard-action-required-modal-background
 
   /* FONTS */
   --onboard-font-family-normal: Sofia Pro;
@@ -511,7 +545,13 @@ The Onboard styles can customized via [CSS variables](https://developer.mozilla.
   --onboard-spacing-4: 1rem;
   --onboard-spacing-5: 0.5rem;
 
+  /* BORDER RADIUS */
+  --onboard-border-radius-1: 24px;
+  --onboard-border-radius-2: 20px;
+  --onboard-border-radius-3: 16px;
+
   /* SHADOWS */
+  --onboard-shadow-0: none;
   --onboard-shadow-1: 0px 4px 12px rgba(0, 0, 0, 0.1);
   --onboard-shadow-2: inset 0px -1px 0px rgba(0, 0, 0, 0.1);
 

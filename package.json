@@ -1,17 +1,15 @@
 {
   "name": "web3-onboard-monorepo",
+  "version": "2.0.2",
   "private": true,
   "workspaces": [
-    "./packages/common",
-    "./packages/core",
-    "./packages/!(demo|core|common)/**",
-    "./packages/demo"
+    "./packages/*"
   ],
   "scripts": {
     "install-m1-mac": "yarn install --ignore-optional",
     "format": "prettier --write 'packages/**/*.ts'",
     "dev": "yarn wsrun dev",
-    "build": "yarn wsrun build",
+    "build": "yarn wsrun --stages build",
     "type-check": "yarn wsrun type-check"
   },
   "devDependencies": {

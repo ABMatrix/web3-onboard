@@ -1,14 +1,14 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n'
   import blocknative from '../../icons/blocknative'
-  import { internalState$ } from '../../streams'
   import en from '../../i18n/en.json'
   import type { i18n } from '../../types'
   import { isSVG } from '../../utils'
+  import { internalState } from '../../internals'
 
   export let step: keyof i18n['connect']
 
-  const { appMetadata } = internalState$.getValue()
+  const { appMetadata } = internalState
   const { icon, logo, name = 'This app' } = appMetadata || {}
 
   const defaultContent = en.connect[step].sidebar
@@ -20,7 +20,6 @@
 <style>
   .sidebar {
     padding: var(--onboard-spacing-3, var(--spacing-3));
-    border-radius: 24px 0 0 24px;
     background: var(
       --onboard-connect-sidebar-background,
       var(--onboard-gray-100, var(--gray-100))

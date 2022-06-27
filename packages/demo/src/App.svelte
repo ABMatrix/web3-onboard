@@ -12,17 +12,20 @@
   import walletConnectModule from '@web3-onboard/walletconnect'
   import coinbaseModule from '@web3-onboard/coinbase'
   import magicModule from '@web3-onboard/magic'
-  import { verifyMessage, verifyTypedData } from 'ethers/lib/utils'
+  import web3authModule from '@web3-onboard/web3auth'
+
+  import dcentModule from '@web3-onboard/dcent'
+  import {
+    recoverAddress,
+    arrayify,
+    hashMessage,
+    verifyTypedData
+  } from 'ethers/lib/utils'
+  import { ethers } from 'ethers'
   import { share } from 'rxjs/operators'
   import VConsole from 'vconsole'
   import blocknativeIcon from './blocknative-icon'
   import blocknativeLogo from './blocknative-logo'
-
-  const toHex = text =>
-    text
-      .split('')
-      .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
-      .join('')
 
   if (window.innerWidth < 700) {
     new VConsole()
@@ -68,6 +71,10 @@
     apiKey: 'pk_test_886ADCAB855632AA'
   })
 
+  const web3auth = web3authModule({
+    clientId: 'DJuUOKvmNnlzy6ruVgeWYWIMKLRyYtjYa9Y10VCeJzWZcygDlrYLyXsBQjpJ2hxlBO9dnl8t9GmAC2qOP5vnIGo'
+  })
+
   const torus = torusModule()
   const ledger = ledgerModule()
   const keepkey = keepkeyModule()
@@ -81,14 +88,17 @@
   const trezor = trezorModule(trezorOptions)
 
   const magic = magicModule({
-    apiKey: 'pk_live_02207D744E81C2BA',
-    // userEmail: 'test@test.com' 
+    apiKey: 'pk_live_02207D744E81C2BA'
+    // userEmail: 'test@test.com'
     // userEmail is optional - if user has already logged in and/or session is still active a login modal will not appear
     // for more info see the @web3-onboard/magic docs
   })
 
+  const dcent = dcentModule()
+
   const onboard = Onboard({
     wallets: [
+      web3auth,
       ledger,
       trezor,
       walletConnect,
@@ -100,7 +110,8 @@
       fortmatic,
       portis,
       torus,
-      gnosis
+      gnosis,
+      dcent
     ],
     chains: [
       {
@@ -151,10 +162,17 @@
       gettingStartedGuide: 'https://blocknative.com',
       explore: 'https://blocknative.com'
     }
-    // example customizing account center
+    // // example customizing account center
     // accountCenter: {
     //   desktop: {
-    //     position: 'bottomRight'
+    //     position: 'topRight',
+    //     enabled: true,
+    //     minimal: false
+    //   },
+    //   mobile: {
+    //     position: 'topRight',
+    //     enabled: true,
+    //     minimal: false
     //   }
     // }
     // example customizing copy
@@ -172,21 +190,37 @@
   // Subscribe to wallet updates
   const wallets$ = onboard.state.select('wallets').pipe(share())
 
-  const signTransactionMessage = provider => {
-    provider.request({
-      method: 'eth_signTransaction',
-      params: [JSON.parse(transactionObject)]
+  const signTransactionMessage = async provider => {
+    const ethersProvider = new ethers.providers.Web3Provider(provider, 'any')
+
+    const signer = ethersProvider.getSigner()
+
+    const signature = await signer.signTransaction({
+      to: '',
+      value: 1000000000000000
     })
+    console.log(signature)
   }
 
   const signMessage = async (provider, address) => {
-    const signature = await provider.request({
-      method: 'eth_sign',
-      params: [address, toHex(signMsg)]
-    })
+    const ethersProvider = new ethers.providers.Web3Provider(provider, 'any')
 
-    const recoveredAddress = verifyMessage(signMsg, signature)
-    console.log({ signMsg, signature, recoveredAddress })
+    const signer = ethersProvider?.getSigner()
+    const addr = await signer?.getAddress()
+    const signature = await signer?.signMessage(signMsg)
+
+    const recoveredAddress = recoverAddress(
+      arrayify(hashMessage(signMsg)),
+      signature
+    )
+
+    if (recoveredAddress !== address) {
+      console.error(
+        "Signature failed. Recovered address doesn' match signing address."
+      )
+    }
+
+    console.log({ signMsg, signature, recoveredAddress, addr })
   }
 
   const signTypedMessage = async (provider, address) => {
@@ -248,6 +282,9 @@
     >
     <button on:click={() => onboard.setChain({ chainId: '0x89' })}
       >Set Chain to Matic</button
+    >
+    <button on:click={() => onboard.state.actions.updateBalances()}
+      >Update Wallet Balance</button
     >
   {/if}
 

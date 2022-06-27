@@ -15,7 +15,39 @@
 
 <script lang="ts">
   import { fade } from 'svelte/transition'
+  import { onDestroy, onMount } from 'svelte'
+  import { internalState } from '../../internals'
 
+  const { device } = internalState
+
+  const body = document.body
+  const html = document.documentElement
+  const trackYScrollPosition = () => {
+    document.documentElement.style.setProperty(
+      '--scroll-y',
+      `${window.scrollY}px`
+    )
+  }
+
+  onMount(() => {
+    window.addEventListener('scroll', trackYScrollPosition, { passive: true })
+    const scrollY = html.style.getPropertyValue('--scroll-y')
+    device.type === 'mobile'
+      ? (html.style.position = 'fixed')
+      : (html.style.overflow = 'hidden')
+
+    body.style.top = `-${scrollY}`
+  })
+
+  onDestroy(() => {
+    device.type === 'mobile'
+      ? (html.style.position = '')
+      : (html.style.overflow = 'auto')
+    const scrollY = body.style.top
+    body.style.top = ''
+    window.scrollTo(0, parseInt(scrollY || '0') * -1)
+    window.removeEventListener('scroll', trackYScrollPosition)
+  })
   export let close: () => void
 </script>
 
@@ -30,7 +62,7 @@
   .background {
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--onboard-modal-backdrop, var(--modal-backdrop));
     pointer-events: all;
   }
 
@@ -47,18 +79,22 @@
 
   .modal-overflow {
     overflow: hidden;
-    border-radius: 24px;
+  }
+
+  .modal-styling {
+    border-radius: var(--onboard-modal-border-radius, var(--border-radius-1));
+    box-shadow: var(--onboard-modal-box-shadow, var(--box-shadow-0));
   }
 
   .modal {
-    border-radius: 24px;
+    border-radius: var(--onboard-modal-border-radius, var(--border-radius-1));
     overflow-y: auto;
     background: white;
   }
 
   @media all and (max-width: 520px) {
     .relative {
-      width: calc(100% - 1rem);
+      width: 100vw;
     }
 
     .modal-overflow {
@@ -78,7 +114,7 @@
   >
     <div class="flex modal-position absolute">
       <div on:click|stopPropagation class="flex relative max-height">
-        <div class="modal-overflow relative flex justify-center">
+        <div class="modal-overflow modal-styling relative flex justify-center">
           <div class="modal relative">
             <slot />
           </div>
